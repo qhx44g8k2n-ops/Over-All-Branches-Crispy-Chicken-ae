@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crispy Chicken | Enterprise BI Ultimate</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            /* Brand Colors - Crispy Theme */
+            --primary: #D32F2F; /* Crispy Red */
+            --primary-dark: #b71c1c;
+            --secondary: #FFC107;
+            --bg-body: #f4f6f6; 
+            --bg-panel: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border: #e0e0e0;
+            
+            /* Chart Colors */
+            --chart-blue: #1976D2;
+            --chart-green: #388E3C;
+            --chart-orange: #F57C00;
+            --chart-purple: #7B1FA2;
+            --chart-red: #D32F2F;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', 'Roboto', 'Helvetica', sans-serif; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        aside {
+            width: 260px;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #333;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+
+        .brand {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            background: var(--primary);
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .brand span { color: var(--secondary); margin-left: 5px; }
+
+        .nav-menu { flex: 1; padding: 20px 10px; display: flex; flex-direction: column; gap: 5px; overflow-y: auto; }
+        
+        .nav-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: white; color: var(--text-main); font-weight: bold; border-left: 4px solid var(--primary); }
+
+        /* --- MAIN CONTENT --- */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-body);
+            position: relative;
+        }
+
+        .view-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        /* --- TABS/HEADER --- */
+        .top-bar {
+            background: white;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .page-title { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+
+        .tabs { display: flex; gap: 20px; }
+        .tab-link {
+            cursor: pointer;
+            padding-bottom: 5px;
+            color: var(--text-muted);
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: 0.3s;
+        }
+        .tab-link:hover { color: var(--primary); }
+        .tab-link.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* --- VIEWS --- */
+        .view { display: none; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- DASHBOARD CARDS --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-panel);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+        .card::after {
+            content:''; position: absolute; top:0; left:0; width: 100%; height: 4px;
+        }
+        .card.kpi-blue::after { background: var(--chart-blue); }
+        .card.kpi-green::after { background: var(--chart-green); }
+        .card.kpi-orange::after { background: var(--chart-orange); }
+        .card.kpi-purple::after { background: var(--chart-purple); }
+
+        .card-title { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; margin-bottom: 5px; }
+        .card-value { font-size: 1.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+
+        /* --- CHARTS --- */
+        .charts-container { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .chart-card {
+            background: var(--bg-panel);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .chart-header { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .chart-title { font-size: 1.1rem; font-weight: 700; color: var(--text-main); }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+
+        /* --- TABLES --- */
+        .table-wrapper {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+        .table-header-controls { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 20px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #fafafa; color: var(--text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tr:hover { background: #f9f9f9; }
+        .num { font-family: 'Consolas', monospace; text-align: right; }
+        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: white; display: inline-block; }
+        .badge.agg { background-color: var(--chart-green); }
+        .badge.store { background-color: var(--chart-blue); }
+        .badge.online { background-color: var(--chart-purple); }
+        .badge.del { background-color: var(--chart-orange); }
+
+        /* --- FORMS --- */
+        .form-grid {
+            background: var(--bg-panel);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .form-row { display: flex; gap: 20px; margin-bottom: 15px; }
+        .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+        input, select {
+            padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; outline: none; transition: 0.2s;
+        }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
+
+        /* --- BUTTONS --- */
+        .btn {
+            padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem;
+        }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-dark); }
+        .btn-secondary { background: #f0f0f0; color: var(--text-main); }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-danger { background: #ffebee; color: var(--primary-dark); }
+        .btn-danger:hover { background: #ffcdd2; }
+        
+        /* --- FILE UPLOAD AREA --- */
+        .upload-area {
+            border: 2px dashed var(--border);
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px;
+            background: #fafafa;
+            transition: 0.2s;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .upload-area:hover { border-color: var(--primary); background: #fff5f5; }
+        .upload-area i { font-size: 2rem; color: var(--text-muted); margin-bottom: 10px; }
+
+        /* --- GM REPORT STYLING --- */
+        .report-paper {
+            background: white; padding: 40px; border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); max-width: 900px; margin: 0 auto;
+        }
+        .report-head { text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 20px; margin-bottom: 20px; }
+        .report-head h1 { color: var(--primary); margin-bottom: 5px; }
+        .report-meta { color: var(--text-muted); font-size: 0.9rem; }
+        
+        .gm-summary { display: flex; justify-content: space-around; margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        .gm-item { text-align: center; }
+        .gm-item h4 { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; margin-bottom: 5px; }
+        .gm-item .val { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+
+        .gm-table th { background: var(--primary); color: white; }
+        .gm-table td { border-bottom: 1px solid #eee; }
+        .gm-table tfoot td { background: #f0f0f0; font-weight: bold; }
+
+        /* --- TOAST --- */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .toast {
+            background: #333; color: white; padding: 12px 20px; border-radius: 6px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            display: flex; align-items: center; gap: 10px; animation: slideIn 0.3s ease; pointer-events: auto; min-width: 250px;
+        }
+        .toast.success { border-left: 5px solid var(--chart-green); }
+        .toast.error { border-left: 5px solid var(--chart-red); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* --- PRINT MEDIA QUERY --- */
+        @media print {
+            aside, .top-bar, .btn, .input-area, .no-print { display: none !important; }
+            body, main, .view-container { height: auto; overflow: visible; background: white; padding: 0; margin: 0; }
+            .view { display: none; }
+            #view-gm-report { display: block; }
+            .report-paper { box-shadow: none; margin: 0; padding: 0; max-width: 100%; }
+            .chart-container { height: 300px; }
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            aside { position: absolute; height: 100%; transform: translateX(-100%); }
+            aside.open { transform: translateX(0); }
+            .charts-container { grid-template-columns: 1fr; }
+            .form-row { flex-direction: column; gap: 10px; }
+            .top-bar { padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+    <div class="brand"><i class="fas fa-drumstick-bite"></i> <span>CRISPY BI</span></div>
+    <div class="nav-menu">
+        <div class="nav-item active" onclick="app.switchTab('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</div>
+        <div class="nav-item" onclick="app.switchTab('entry')"><i class="fas fa-edit"></i> Data Entry</div>
+        <div class="nav-item" onclick="app.switchTab('report')"><i class="fas fa-table"></i> Detailed Log</div>
+        <div class="nav-item" onclick="app.switchTab('gm-report')"><i class="fas fa-file-invoice-dollar"></i> GM Report</div>
+        <div class="nav-item" onclick="app.switchTab('import')"><i class="fas fa-cog"></i> Settings</div>
+    </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main>
+    <div class="top-bar">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button class="btn btn-secondary no-print" onclick="document.getElementById('sidebar').classList.toggle('open')" style="padding:5px 10px;">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="page-title" id="pageTitle">Executive Overview</div>
+        </div>
+        <div class="tabs no-print">
+            <div class="tab-link active" onclick="app.switchTab('dashboard')">Dashboard</div>
+            <div class="tab-link" onclick="app.switchTab('entry')">Entry</div>
+            <div class="tab-link" onclick="app.switchTab('gm-report')">Reports</div>
+        </div>
+    </div>
+
+    <div class="view-container">
+        
+        <!-- VIEW 1: DASHBOARD -->
+        <div id="view-dashboard" class="view active">
+            <!-- Filter Toolbar -->
+            <div style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border); display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-filter" style="color:var(--text-muted)"></i>
+                    <select id="dashBranch" onchange="app.refreshDashboard()" style="min-width: 150px;">
+                        <option value="all">All Branches</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <i class="far fa-calendar-alt" style="color:var(--text-muted)"></i>
+                    <select id="dashDate" onchange="app.refreshDashboard()">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">Last 7 Days</option>
+                    </select>
+                </div>
+                <div style="margin-left: auto; font-size: 0.85rem; color: var(--text-muted);">
+                    Showing live data
+                </div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="dashboard-grid">
+                <div class="card kpi-blue">
+                    <div class="card-title">Total Revenue</div>
+                    <div class="card-value" id="kpiRevenue">AED 0</div>
+                    <div style="color:var(--chart-green); font-size:0.8rem; font-weight:600;"><i class="fas fa-arrow-up"></i> Net Sales</div>
+                </div>
+                <div class="card kpi-green">
+                    <div class="card-title">Transactions</div>
+                    <div class="card-value" id="kpiTxn">0</div>
+                    <div style="color:var(--text-muted); font-size:0.8rem;">Total Orders</div>
+                </div>
+                <div class="card kpi-orange">
+                    <div class="card-title">Avg Ticket Size</div>
+                    <div class="card-value" id="kpiATS">AED 0</div>
+                    <div style="color:var(--text-muted); font-size:0.8rem;">Per Transaction</div>
+                </div>
+                <div class="card kpi-purple">
+                    <div class="card-title">Top Branch</div>
+                    <div class="card-value" id="kpiTopBranch" style="font-size:1.4rem;">-</div>
+                    <div style="color:var(--text-muted); font-size:0.8rem;">By Revenue</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Revenue by Branch</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="branchChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Sales Channel Mix</div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="channelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: ENTRY -->
+        <div id="view-entry" class="view">
+            <div class="form-grid">
+                <h3 style="margin-bottom: 20px; color: var(--primary);"><i class="fas fa-plus-circle"></i> New Sales Record</h3>
+                <form id="addForm" onsubmit="app.handleAddRecord(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="inpDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Branch</label>
+                            <select id="inpBranch" required></select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tender Type</label>
+                            <select id="inpTender" required onchange="app.updateChannelPreview()"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>Channel (Auto)</label>
+                            <input type="text" id="inpChannel" readonly style="background: #eee; font-weight:bold; border:none;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Sales Amount (AED)</label>
+                            <input type="number" id="inpSales" step="0.01" required placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Transactions (Count)</label>
+                            <input type="number" id="inpTxn" required placeholder="0">
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; text-align: right;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('addForm').reset()">Clear</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Record</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- VIEW 3: REPORT TABLE -->
+        <div id="view-report" class="view">
+            <div class="table-wrapper">
+                <div class="table-header-controls">
+                    <h3>Detailed Log</h3>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="searchTable" placeholder="Search..." onkeyup="app.renderTable()" style="padding: 5px 10px;">
+                        <button class="btn btn-primary btn-sm" onclick="app.exportCSV()"><i class="fas fa-file-csv"></i> Export</button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Branch</th>
+                                <th>Tender Type</th>
+                                <th>Channel</th>
+                                <th class="num">Sales</th>
+                                <th class="num">Txn</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: GM REPORT -->
+        <div id="view-gm-report" class="view">
+            <div class="report-paper">
+                <div class="report-head">
+                    <h1>CRISPY CHICKEN</h1>
+                    <p style="font-size: 1.2rem; letter-spacing: 2px; margin-bottom: 5px;">OPERATIONAL REPORT</p>
+                    <p class="report-meta" id="reportDateStr">Generated on: </p>
+                </div>
+
+                <div class="gm-summary">
+                    <div class="gm-item">
+                        <h4>Total Revenue</h4>
+                        <div class="val" id="gmRev">AED 0.00</div>
+                    </div>
+                    <div class="gm-item">
+                        <h4>Total Transactions</h4>
+                        <div class="val" id="gmTxn">0</div>
+                    </div>
+                    <div class="gm-item">
+                        <h4>Average Ticket</h4>
+                        <div class="val" id="gmATS">AED 0.00</div>
+                    </div>
+                </div>
+
+                <table class="gm-table" style="width:100%; margin-top: 20px; border-collapse: collapse;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left; padding: 12px;">Branch</th>
+                            <th class="num">Aggregator</th>
+                            <th class="num">In-Store</th>
+                            <th class="num">Delivery</th>
+                            <th class="num">Online</th>
+                            <th class="num" style="background:#b71c1c;">Total Sales</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gmTableBody"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td style="padding: 12px; font-weight:bold;">GRAND TOTAL</td>
+                            <td class="num" id="gmFootAgg">0</td>
+                            <td class="num" id="gmFootStore">0</td>
+                            <td class="num" id="gmFootDel">0</td>
+                            <td class="num" id="gmFootOnline">0</td>
+                            <td class="num" id="gmFootTotal" style="background:#b71c1c; color:white;">0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <div style="margin-top: 40px; text-align: center;" class="no-print">
+                    <button class="btn btn-primary" onclick="window.print()"><i class="fas fa-print"></i> Print Report</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 5: SETTINGS / IMPORT -->
+        <div id="view-import" class="view">
+            <div class="form-grid">
+                <h3 style="color: var(--primary); margin-bottom: 15px;">System Management</h3>
+                
+                <!-- Upload CSV Section -->
+                <div style="margin-bottom: 30px; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <h4 style="margin-top:0; margin-bottom:10px;"><i class="fas fa-file-upload"></i> Import Data</h4>
+                    
+                    <div class="upload-area" onclick="document.getElementById('csvFileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p><strong>Click to upload CSV file</strong></p>
+                        <small>Format: Date, Branch, Tender, Channel, Sales, Txn</small>
+                        <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="app.handleFileUpload(this)">
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="btn btn-secondary btn-sm" onclick="app.downloadTemplate()"><i class="fas fa-download"></i> Download CSV Template</button>
+                    </div>
+                </div>
+
+                <!-- Demo Data Section -->
+                <div style="padding: 20px; background: #e3f2fd; border-left: 5px solid #2196F3; border-radius: 4px; margin-bottom: 20px;">
+                    <h4 style="margin-top:0;">Load Demo Data</h4>
+                    <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">This will populate the system with the sample dataset (Hamdan St, Khalidiya, etc.) to test the dashboards.</p>
+                    <button class="btn btn-primary" onclick="app.loadSampleData()"><i class="fas fa-database"></i> Load Data Now</button>
+                </div>
+
+                <!-- Danger Zone -->
+                <div style="padding: 20px; background: #ffebee; border-left: 5px solid #D32F2F; border-radius: 4px;">
+                    <h4 style="margin-top:0;">Danger Zone</h4>
+                    <p style="font-size: 0.9rem; color: #555; margin-bottom: 10px;">Permanently delete all records from browser storage.</p>
+                    <button class="btn btn-danger" onclick="app.clearData()"><i class="fas fa-trash-alt"></i> Delete All Data</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+    // --- CONFIGURATION ---
+    const BRANCHES = ["Hamdan St", "Khalidiya", "Mussafah", "Muroor", "Al Electra", "Al Barsha", "Al Satwa", "Al Rigga", "Al Majaz"];
+    
+    // Mapping Tender Types to logical Channels
+    const CHANNEL_MAP = {
+        "Cash": "In-Store",
+        "Visa Card": "In-Store",
+        "Master card": "In-Store",
+        "Keeta CARD": "Aggregator",
+        "Careem CARD": "Aggregator",
+        "NOON CARD": "Aggregator",
+        "SMILES CARD": "Aggregator",
+        "DELIVERO CARD": "Aggregator",
+        "ONLINE CASH": "Online",
+        "ONLINE CARD": "Online",
+        "Delivery Cash": "Delivery",
+        "Delivery CARD": "Delivery"
+    };
+
+    // --- STATE ---
+    let salesData = []; // Flat array of objects
+    let chartBranch = null;
+    let chartChannel = null;
+
+    // --- APP LOGIC ---
+    const app = {
+        init: () => {
+            // Populate Dropdowns
+            const branchSelects = [document.getElementById('dashBranch'), document.getElementById('inpBranch')];
+            branchSelects.forEach(sel => {
+                BRANCHES.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value = b;
+                    opt.innerText = b;
+                    sel.appendChild(opt);
+                });
+            });
+
+            const tenderSel = document.getElementById('inpTender');
+            Object.keys(CHANNEL_MAP).forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.innerText = t;
+                tenderSel.appendChild(opt);
+            });
+
+            // Load Data
+            app.loadData();
+            
+            // Set Date Input Default to Today
+            document.getElementById('inpDate').valueAsDate = new Date();
+        },
+
+        // --- NAVIGATION ---
+        switchTab: (viewId) => {
+            // Hide all views
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            // Show selected
+            document.getElementById('view-' + viewId).classList.add('active');
+            
+            // Update Sidebar UI
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            // Very simple matching based on onclick attribute content
+            const navs = document.querySelectorAll('.nav-item');
+            // Reset logic for visual feedback
+            if(viewId === 'dashboard') navs[0].classList.add('active');
+            if(viewId === 'entry') navs[1].classList.add('active');
+            if(viewId === 'report') navs[2].classList.add('active');
+            if(viewId === 'gm-report') navs[3].classList.add('active');
+            if(viewId === 'import') navs[4].classList.add('active');
+
+            // Update Top Bar Title
+            const titles = {
+                'dashboard': 'Executive Overview',
+                'entry': 'Data Entry',
+                'report': 'Detailed Transaction Log',
+                'gm-report': 'General Manager Report',
+                'import': 'System Settings'
+            };
+            document.getElementById('pageTitle').innerText = titles[viewId];
+
+            // Trigger specific render functions
+            if(viewId === 'gm-report') app.generateGMReport();
+            if(viewId === 'report') app.renderTable();
+            
+            // Mobile: close sidebar if open
+            if(window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+        },
+
+        // --- DATA HANDLING ---
+        loadData: () => {
+            const stored = localStorage.getItem('crispy_bi_data');
+            if (stored) {
+                try {
+                    salesData = JSON.parse(stored);
+                } catch(e) { salesData = []; }
+            }
+            app.refreshDashboard();
+        },
+
+        saveData: () => {
+            localStorage.setItem('crispy_bi_data', JSON.stringify(salesData));
+            app.refreshDashboard();
+        },
+
+        clearData: () => {
+            if(confirm("Are you sure? This will delete all data permanently.")) {
+                salesData = [];
+                localStorage.removeItem('crispy_bi_data');
+                app.refreshDashboard();
+                app.toast("Data Cleared", "error");
+            }
+        },
+
+        // --- CSV UPLOAD LOGIC ---
+        downloadTemplate: () => {
+            const header = "Date,Branch,Tender,Channel,Sales,Txn\n";
+            const sample = "2026-01-01,Hamdan St,Cash,In-Store,5000,200\n2026-01-01,Hamdan St,Keeta CARD,Aggregator,10000,250";
+            const blob = new Blob([header + sample], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'crispy_template.csv';
+            a.click();
+        },
+
+        handleFileUpload: (input) => {
+            const file = input.files[0];
+            if(!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const rows = text.split(/\r\n|\n/);
+                let count = 0;
+                let errors = 0;
+
+                rows.forEach((row, index) => {
+                    // Skip empty lines or potential header
+                    if(!row.trim()) return;
+                    if(index === 0 && row.toLowerCase().includes("date")) return; 
+
+                    // Smart splitter (comma or tab)
+                    const cols = row.includes(',') ? row.split(',') : (row.includes('\t') ? row.split('\t') : row.split(/\s+/));
+                    
+                    if(cols.length >= 5) {
+                        // Mapping based on template: Date, Branch, Tender, Channel, Sales, Txn
+                        // We clean up quotes if present
+                        const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : '';
+                        
+                        const rawDate = clean(cols[0]);
+                        const branch = clean(cols[1]);
+                        const tender = clean(cols[2]);
+                        const channel = clean(cols[3]);
+                        const sales = parseFloat(clean(cols[4]).replace(/,/g,'')) || 0;
+                        const txn = parseInt(clean(cols[5])) || 0;
+
+                        // Basic Validation
+                        if(rawDate && branch && sales > 0) {
+                            const dateISO = app.formatDateToISO(rawDate);
+                            salesData.push({
+                                id: Date.now() + Math.random(),
+                                date: dateISO,
+                                branch: branch,
+                                tender: tender,
+                                channel: channel,
+                                sales: sales,
+                                txn: txn
+                            });
+                            count++;
+                        } else {
+                            errors++;
+                        }
+                    }
+                });
+
+                app.saveData();
+                app.toast(`Imported ${count} records.`, "success");
+                if(errors > 0) console.log(`Skipped ${errors} invalid rows.`);
+                
+                // Reset input
+                input.value = '';
+            };
+            reader.readAsText(file);
+        },
+
+        formatDateToISO: (dateStr) => {
+            // Handles DD/MM/YYYY or YYYY-MM-DD
+            if(dateStr.includes('-')) return dateStr; // Assume ISO already
+            if(dateStr.includes('/')) {
+                const parts = dateStr.split('/');
+                if(parts.length === 3) {
+                    // Check if year is first or last
+                    if(parts[0].length === 4) return dateStr.replace(/\//g, '-'); // YYYY/MM/DD
+                    return `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`; // DD/MM/YYYY
+                }
+            }
+            return new Date().toISOString().split('T')[0]; // Fallback
+        },
+
+        loadSampleData: () => {
+            const rawText = `1/1/2026,JAN 26,Hamdan St,Keeta CARD,Aggregator,10,546,248
+1/1/2026,JAN 26,Hamdan St,Cash,In-Store,4,680,208
+1/1/2026,JAN 26,Hamdan St,Master card,In-Store,3,368,119
+1/1/2026,JAN 26,Hamdan St,NOON CARD,Aggregator,3195,90
+1/1/2026,JAN 26,Hamdan St,Visa Card,In-Store,3039,98
+1/1/2026,JAN 26,Hamdan St,Delivery CARD,Delivery,1175,22
+1/1/2026,JAN 26,Hamdan St,Delivery Cash,Delivery,1012,24
+1/1/2026,JAN 26,Hamdan St,ONLINE CASH,Online,450,9
+1/1/2026,JAN 26,Hamdan St,Careem CARD,Aggregator,430,10
+1/1/2026,JAN 26,Hamdan St,SMILES CARD,Aggregator,429,10
+1/1/2026,JAN 26,Hamdan St,ONLINE CARD,Online,389,3
+1/1/2026,JAN 26,Hamdan St,DELIVERO CARD,Aggregator,25,1
+1/1/2026,JAN 26,Hamdan St,ONLINE CASH,Online,115,3
+1/1/2026,JAN 26,Khalidiya,Keeta CARD,Aggregator,11208.5,256
+1/1/2026,JAN 26,Khalidiya,NOON CARD,Aggregator,3063,87
+1/1/2026,JAN 26,Khalidiya,Cash,In-Store,3055,155
+1/1/2026,JAN 26,Khalidiya,Master card,In-Store,2140,97
+1/1/2026,JAN 26,Khalidiya,Visa Card,In-Store,1659,53
+1/1/2026,JAN 26,Khalidiya,Delivery CARD,Delivery,346,8
+1/1/2026,JAN 26,Khalidiya,Delivery Cash,Delivery,442,11
+1/1/2026,JAN 26,Khalidiya,Careem CARD,Aggregator,318,6
+1/1/2026,JAN 26,Khalidiya,DELIVERO CARD,Aggregator,293,6
+1/1/2026,JAN 26,Khalidiya,ONLINE CASH,Online,156.9,3
+1/1/2026,JAN 26,Khalidiya,ONLINE CARD,Online,125,1
+1/1/2026,JAN 26,Mussafah,Keeta CARD,Aggregator,10843,264
+1/1/2026,JAN 26,Mussafah,Cash,In-Store,4680,201
+1/1/2026,JAN 26,Mussafah,Master card,In-Store,2315,91
+1/1/2026,JAN 26,Mussafah,NOON CARD,Aggregator,5604,144
+1/1/2026,JAN 26,Mussafah,Visa Card,In-Store,1434,56
+1/1/2026,JAN 26,Mussafah,SMILES CARD,Aggregator,1090,19
+1/1/2026,JAN 26,Mussafah,Delivery CARD,Delivery,1081,15
+1/1/2026,JAN 26,Mussafah,Delivery Cash,Delivery,534,12
+1/1/2026,JAN 26,Mussafah,ONLINE CASH,Online,318,6
+1/1/2026,JAN 26,Mussafah,ONLINE CARD,Online,34,1
+1/1/2026,JAN 26,Muroor,Keeta CARD,Aggregator,8520,192
+1/1/2026,JAN 26,Muroor,NOON CARD,Aggregator,3083,77
+1/1/2026,JAN 26,Muroor,Cash,In-Store,2239,117
+1/1/2026,JAN 26,Muroor,Visa Card,In-Store,2416,63
+1/1/2026,JAN 26,Muroor,Master card,In-Store,2014,61
+1/1/2026,JAN 26,Muroor,NOON CARD,Aggregator,1881,51
+1/1/2026,JAN 26,Muroor,Delivery CARD,Delivery,721,16
+1/1/2026,JAN 26,Muroor,Delivery Cash,Delivery,126,4
+1/1/2026,JAN 26,Muroor,ONLINE CASH,Online,68,1
+1/1/2026,JAN 26,Muroor,ONLINE CARD,Online,95,1`;
+
+            const lines = rawText.split('\n');
+            let count = 0;
+
+            lines.forEach(line => {
+                // Split by commas (standard CSV) or tabs if copied from Excel
+                const cols = line.trim().split(',');
+                // Handle the specific messy format from the sample data which uses tabs/spaces sometimes
+                // But the parser above handles it generally. Here we specifically use comma for sample.
+                if(cols.length < 7) return; 
+
+                // Mapping: 0:Date, 1:Month(Ignore), 2:Branch, 3:Tender, 4:Channel, 5:Sales, 6:Txn
+                const dStr = cols[0];
+                // Convert MM/DD/YYYY to YYYY-MM-DD
+                let dateParts = dStr.split('/');
+                if(dateParts.length === 3) {
+                    const dateISO = `${dateParts[2]}-${dateParts[0].padStart(2,'0')}-${dateParts[1].padStart(2,'0')}`;
+                    
+                    const record = {
+                        id: Date.now() + Math.random(),
+                        date: dateISO,
+                        branch: cols[2],
+                        tender: cols[3],
+                        channel: cols[4],
+                        sales: parseFloat(cols[5].replace(/,/g,'')) || 0,
+                        txn: parseInt(cols[6]) || 0
+                    };
+                    salesData.push(record);
+                    count++;
+                }
+            });
+
+            app.saveData();
+            app.toast(`Loaded ${count} records successfully`, "success");
+        },
+
+        // --- ANALYTICS & FILTERING ---
+        getFilteredData: () => {
+            const branch = document.getElementById('dashBranch').value;
+            const dateScope = document.getElementById('dashDate').value;
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            return salesData.filter(d => {
+                // Branch Filter
+                if (branch !== 'all' && d.branch !== branch) return false;
+
+                // Date Filter
+                if (dateScope === 'today') {
+                    if (d.date !== todayStr) return false;
+                } else if (dateScope === 'week') {
+                    const diffTime = Math.abs(new Date(todayStr) - new Date(d.date));
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    if (diffDays > 7) return false;
+                }
+                return true;
+            });
+        },
+
+        refreshDashboard: () => {
+            const data = app.getFilteredData();
+
+            // 1. Calculate KPIs
+            let totalRev = 0;
+            let totalTxn = 0;
+            let branchTotals = {};
+
+            data.forEach(d => {
+                totalRev += d.sales;
+                totalTxn += d.txn;
+                // Branch Stats
+                if(!branchTotals[d.branch]) branchTotals[d.branch] = 0;
+                branchTotals[d.branch] += d.sales;
+            });
+
+            // Find Top Branch
+            let topBranch = "-";
+            let topVal = 0;
+            for(const [b, v] of Object.entries(branchTotals)) {
+                if(v > topVal) { topVal = v; topBranch = b; }
+            }
+
+            // Update DOM
+            document.getElementById('kpiRevenue').innerText = `AED ${totalRev.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('kpiTxn').innerText = totalTxn.toLocaleString();
+            document.getElementById('kpiATS').innerText = `AED ${totalTxn > 0 ? (totalRev/totalTxn).toFixed(2) : "0.00"}`;
+            document.getElementById('kpiTopBranch').innerText = topBranch;
+
+            // 2. Update Charts
+            app.renderCharts(data, branchTotals);
+        },
+
+        renderCharts: (data, branchTotals) => {
+            // Prepare Branch Data (Sort by Value)
+            const sortedBranches = Object.entries(branchTotals).sort((a,b) => b[1] - a[1]);
+
+            // Prepare Channel Data
+            const channelMap = { "Aggregator":0, "In-Store":0, "Delivery":0, "Online":0 };
+            data.forEach(d => {
+                if(channelMap[d.channel] !== undefined) channelMap[d.channel] += d.sales;
+            });
+
+            // --- Branch Bar Chart ---
+            const ctx1 = document.getElementById('branchChart').getContext('2d');
+            if(chartBranch) chartBranch.destroy();
+            
+            chartBranch = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: sortedBranches.map(x => x[0]),
+                    datasets: [{
+                        label: 'Sales (AED)',
+                        data: sortedBranches.map(x => x[1]),
+                        backgroundColor: '#D32F2F',
+                        borderRadius: 4,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+                }
+            });
+
+            // --- Channel Doughnut Chart ---
+            const ctx2 = document.getElementById('channelChart').getContext('2d');
+            if(chartChannel) chartChannel.destroy();
+
+            chartChannel = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(channelMap),
+                    datasets: [{
+                        data: Object.values(channelMap),
+                        backgroundColor: ['#388E3C', '#1976D2', '#F57C00', '#7B1FA2'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        },
+
+        // --- FORM HANDLING ---
+        updateChannelPreview: () => {
+            const tender = document.getElementById('inpTender').value;
+            document.getElementById('inpChannel').value = CHANNEL_MAP[tender] || "Unknown";
+        },
+
+        handleAddRecord: (e) => {
+            e.preventDefault();
+            const date = document.getElementById('inpDate').value;
+            const branch = document.getElementById('inpBranch').value;
+            const tender = document.getElementById('inpTender').value;
+            const channel = document.getElementById('inpChannel').value;
+            const sales = parseFloat(document.getElementById('inpSales').value);
+            const txn = parseInt(document.getElementById('inpTxn').value);
+
+            if(!date || !branch) { app.toast("Missing Fields", "error"); return; }
+
+            salesData.push({
+                id: Date.now(),
+                date, branch, tender, channel, sales, txn
+            });
+
+            app.saveData();
+            document.getElementById('addForm').reset();
+            // Reset date to today manually since reset clears it
+            document.getElementById('inpDate').valueAsDate = new Date();
+            app.toast("Record Added", "success");
+        },
+
+        // --- REPORTS ---
+        renderTable: () => {
+            const tbody = document.querySelector('#dataTable tbody');
+            tbody.innerHTML = '';
+            const term = document.getElementById('searchTable').value.toLowerCase();
+
+            // Filter by search term
+            const filtered = salesData.filter(d => 
+                d.branch.toLowerCase().includes(term) || 
+                d.tender.toLowerCase().includes(term) ||
+                d.date.includes(term)
+            ).sort((a,b) => new Date(b.date) - new Date(a.date)); // Sort Descending
+
+            if(filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#999;">No records found</td></tr>';
+                return;
+            }
+
+            filtered.forEach(d => {
+                const tr = document.createElement('tr');
+                // Badge Color logic
+                let badgeClass = 'store';
+                if(d.channel === 'Aggregator') badgeClass = 'agg';
+                if(d.channel === 'Online') badgeClass = 'online';
+                if(d.channel === 'Delivery') badgeClass = 'del';
+
+                tr.innerHTML = `
+                    <td>${d.date}</td>
+                    <td style="font-weight:600;">${d.branch}</td>
+                    <td>${d.tender}</td>
+                    <td><span class="badge ${badgeClass}">${d.channel}</span></td>
+                    <td class="num">${d.sales.toLocaleString()}</td>
+                    <td class="num">${d.txn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        },
+
+        generateGMReport: () => {
+            document.getElementById('reportDateStr').innerText = "Generated: " + new Date().toLocaleString();
+            
+            // Aggregate Data for GM Report (Usually Total Data, not filtered by dashboard UI)
+            // We will use ALL data for this report
+            let totalRev = 0;
+            let totalTxn = 0;
+            
+            // Pivot Structure: { BranchName: { Aggregator: 0, In-Store:0... } }
+            let reportData = {};
+
+            salesData.forEach(d => {
+                totalRev += d.sales;
+                totalTxn += d.txn;
+
+                if(!reportData[d.branch]) reportData[d.branch] = { "Aggregator":0, "In-Store":0, "Delivery":0, "Online":0, "Total":0 };
+                
+                if(reportData[d.branch][d.channel] !== undefined) {
+                    reportData[d.branch][d.channel] += d.sales;
+                    reportData[d.branch]["Total"] += d.sales;
+                }
+            });
+
+            // Update Summary Header
+            document.getElementById('gmRev').innerText = `AED ${totalRev.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+            document.getElementById('gmTxn').innerText = totalTxn.toLocaleString();
+            document.getElementById('gmATS').innerText = `AED ${totalTxn > 0 ? (totalRev/totalTxn).toFixed(2) : "0.00"}`;
+
+            // Build Table
+            const tbody = document.getElementById('gmTableBody');
+            tbody.innerHTML = '';
+
+            let grandAgg = 0, grandStore = 0, grandDel = 0, grandOn = 0;
+
+            BRANCHES.forEach(branch => {
+                const data = reportData[branch];
+                if(data && data.Total > 0) {
+                    grandAgg += data.Aggregator;
+                    grandStore += data["In-Store"];
+                    grandDel += data.Delivery;
+                    grandOn += data.Online;
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 12px;">${branch}</td>
+                        <td class="num">${data.Aggregator.toLocaleString()}</td>
+                        <td class="num">${data["In-Store"].toLocaleString()}</td>
+                        <td class="num">${data.Delivery.toLocaleString()}</td>
+                        <td class="num">${data.Online.toLocaleString()}</td>
+                        <td class="num" style="font-weight:bold; background:#f9f9f9;">${data.Total.toLocaleString()}</td>
+                    `;
+                    tbody.appendChild(tr);
+                }
+            });
+
+            // Footer Totals
+            document.getElementById('gmFootAgg').innerText = grandAgg.toLocaleString();
+            document.getElementById('gmFootStore').innerText = grandStore.toLocaleString();
+            document.getElementById('gmFootDel').innerText = grandDel.toLocaleString();
+            document.getElementById('gmFootOnline').innerText = grandOn.toLocaleString();
+            document.getElementById('gmFootTotal').innerText = totalRev.toLocaleString();
+        },
+
+        exportCSV: () => {
+            const headers = ["Date", "Branch", "Tender", "Channel", "Sales", "Transactions"];
+            const rows = salesData.map(d => [d.date, d.branch, d.tender, d.channel, d.sales, d.txn].join(","));
+            
+            let csvContent = "data:text/csv;charset=utf-8," 
+                + headers.join(",") + "\n" 
+                + rows.join("\n");
+                
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "crispy_sales_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        },
+
+        toast: (msg, type='info') => {
+            const c = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.innerHTML = `<i class="fas ${type==='success'?'fa-check-circle':(type==='error'?'fa-exclamation-circle':'fa-info-circle')}"></i> ${msg}`;
+            c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        }
+    };
+
+    // Start App
+    document.addEventListener('DOMContentLoaded', app.init);
+</script>
+</body>
+</html>
